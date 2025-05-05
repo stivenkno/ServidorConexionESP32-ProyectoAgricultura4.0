@@ -1,9 +1,14 @@
 import express from "express";
-import { createServer } from "https"; // Asegúrate de usar certificados válidos si usas https
+import { createServer } from "https";
 import { WebSocketServer } from "ws";
 
 const app = express();
+
 const server = createServer(app);
+
+const PORT = process.env.PORT || 3000;
+
+// Crear servidor WebSocket sobre el mismo HTTP server
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws, req) => {
@@ -13,7 +18,7 @@ wss.on("connection", (ws, req) => {
   // Enviar saludo al conectar
   ws.send(JSON.stringify({ type: "info", msg: "¡Hola ESP32!" }));
 
-  // Escuchar mensajes del cliente
+  // Escuchar mensajes del cliente (ESP32)
   ws.on("message", (data) => {
     let message;
     try {
@@ -35,7 +40,6 @@ wss.on("connection", (ws, req) => {
   }, 3000);
 
   ws.on("close", () => {
-    clearInterval(intervalo);
     console.log(`❌ Cliente WebSocket desconectado: ${clientIP}`);
   });
 
@@ -44,12 +48,11 @@ wss.on("connection", (ws, req) => {
   });
 });
 
-// Ruta de prueba
+// Ruta HTTP de prueba
 app.get("/", (req, res) => {
-  res.send("Servidor Express + WebSocket funcionando");
+  res.send("Servidor Express + ws funcionando");
 });
 
-const PORT = 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
 });
