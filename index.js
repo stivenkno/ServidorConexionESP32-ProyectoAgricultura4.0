@@ -1,8 +1,11 @@
 import express from "express";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
 const server = createServer(app);
 
@@ -16,7 +19,6 @@ wss.on("connection", (ws, req) => {
   // Enviar saludo al conectar
   ws.send(JSON.stringify({ type: "info", msg: "¡Hola ESP32!" }));
 
-  // Escuchar mensajes del cliente (ESP32)
   ws.on("message", (data) => {
     let message;
     try {
@@ -24,17 +26,15 @@ wss.on("connection", (ws, req) => {
     } catch (e) {
       message = data.toString();
     }
-    console.log("📨 Mensaje recibido del ESP32:", message);
-  });
+    console.log("📨 Mensaje recibido :", message);
 
-  let estado = false;
-  const intervalo = setInterval(() => {
-    const mensaje = estado ? "encender" : "apagar";
-    if (ws.readyState === ws.OPEN) {
-      ws.send(JSON.stringify({ from: clientIP, payload: mensaje }));
-    }
-    estado = !estado;
-  }, 3000);
+    // Reenviar a todas las conexiones activas (broadcast)
+    wss.clients.forEach((client) => {
+      if (client.readyState === client.OPEN) {
+        client.send(JSON.stringify({ from: clientIP, payload: message }));
+      }
+    });
+  });
 
   ws.on("close", () => {
     console.log(`❌ Cliente WebSocket desconectado: ${clientIP}`);
@@ -46,8 +46,10 @@ wss.on("connection", (ws, req) => {
 });
 
 // Ruta HTTP de prueba
-app.get("/", (req, res) => {
-  res.send("Servidor Express + ws funcionando");
+app.post("/", async (req, res) => {
+  const { comando } = req.body;
+  console.log("📩 Datos recibidos:", comando);
+  res.send("Datos recibidos");
 });
 
 // Arrancar el servidor en el puerto 3000
