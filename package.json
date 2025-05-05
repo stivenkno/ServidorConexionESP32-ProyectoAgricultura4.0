@@ -10,5 +10,10 @@
   "keywords": [],
   "author": "Stiven Cano Aguirre",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "ws": "^8.18.2"
+  }
 }
