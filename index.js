@@ -27,6 +27,15 @@ wss.on("connection", (ws, req) => {
     console.log("📨 Mensaje recibido del ESP32:", message);
   });
 
+  let estado = false;
+  const intervalo = setInterval(() => {
+    const mensaje = estado ? "encender" : "apagar";
+    if (ws.readyState === ws.OPEN) {
+      ws.send(JSON.stringify({ from: clientIP, payload: mensaje }));
+    }
+    estado = !estado;
+  }, 3000);
+
   ws.on("close", () => {
     console.log(`❌ Cliente WebSocket desconectado: ${clientIP}`);
   });
