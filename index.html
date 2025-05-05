@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const socket = new WebSocket(
+        "https://servidor-ws-conexionesp32.onrender.com"
+      ); // si usas HTTPS
+      // o
+      // const socket = new WebSocket("ws://localhost:3000"); // si estás en local y usas HTTP
+
+      socket.onopen = () => {
+        console.log("✅ Conectado al servidor WebSocket");
+        socket.send(
+          JSON.stringify({ type: "hello", msg: "Hola desde el navegador" })
+        );
+      };
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("📩 Mensaje del servidor:", data);
+      };
+
+      socket.onclose = () => {
+        console.log("🔌 Conexión cerrada");
+      };
+
+      socket.onerror = (error) => {
+        console.error("⚠️ Error en la conexión WebSocket:", error);
+      };
+    </script>
+  </body>
+</html>
