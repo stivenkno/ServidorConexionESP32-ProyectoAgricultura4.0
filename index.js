@@ -28,12 +28,64 @@ wss.on("connection", (ws, req) => {
     }
     console.log("📨 Mensaje recibido :", message);
 
-    // Reenviar a todas las conexiones activas (broadcast)
-    wss.clients.forEach((client) => {
-      if (client.readyState === client.OPEN) {
-        client.send(JSON.stringify({ from: clientIP, payload: message }));
-      }
-    });
+    switch (message) {
+      case "encender luz habitación":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ from: clientIP, payload: 1 }));
+          }
+        });
+        break;
+      case "apagar luz habitación":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ from: clientIP, payload: 0 }));
+          }
+        });
+        break;
+      case "encender luz balcón":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ from: clientIP, payload: 2 }));
+          }
+        });
+        break;
+      case "apagar luz balcón":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ from: clientIP, payload: 3 }));
+          }
+        });
+        break;
+      case "encender luz sala":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ from: clientIP, payload: 4 }));
+          }
+        });
+        break;
+      case "apagar luz sala":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ from: clientIP, payload: 5 }));
+          }
+        });
+        break;
+      case "encender televisor":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ from: clientIP, payload: 6 }));
+          }
+        });
+        break;
+      case "apagar televisor":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ from: clientIP, payload: 7 }));
+          }
+        });
+        break;
+    }
   });
 
   ws.on("close", () => {
