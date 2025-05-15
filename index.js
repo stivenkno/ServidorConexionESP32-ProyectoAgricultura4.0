@@ -85,6 +85,20 @@ wss.on("connection", (ws, req) => {
           }
         });
         break;
+      case "abrir puerta":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(8);
+          }
+        });
+        break;
+      case "cerrar puerta":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(9);
+          }
+        });
+        break;
     }
   });
 
