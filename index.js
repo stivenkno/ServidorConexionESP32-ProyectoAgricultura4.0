@@ -99,6 +99,20 @@ wss.on("connection", (ws, req) => {
           }
         });
         break;
+      case "encender luz escaleras":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(10);
+          }
+        });
+        break;
+      case "apagar luz escaleras":
+        wss.clients.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(11);
+          }
+        });
+        break;
     }
   });
 
