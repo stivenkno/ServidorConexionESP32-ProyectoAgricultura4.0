@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import cors from "cors";
+import { type } from "os";
 
 const app = express();
 app.use(cors());
@@ -17,7 +18,7 @@ wss.on("connection", (ws, req) => {
   console.log(`🖧 Cliente WebSocket conectado: ${clientIP}`);
 
   // Enviar saludo al conectar
-  ws.send(JSON.stringify({ type: "info", msg: "¡Hola ESP32!" }));
+  ws.send(JSON.stringify({ type: "info", msg: "¡Hola,Bienvenido!" }));
 
   ws.on("message", (data) => {
     let message;
@@ -28,6 +29,19 @@ wss.on("connection", (ws, req) => {
     }
     console.log("📨 Mensaje recibido :", message);
 
+    if(message.msg == "iniciar simulacion"){
+      wss.clients.forEach((client) => {
+      
+      if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type:"servermsg",
+            msg:"iniciar simulacion",
+            data:data
+          }));
+       }
+        });
+    }
+
     switch (message) {
       case "encender luz habitación":
         wss.clients.forEach((client) => {
@@ -36,83 +50,7 @@ wss.on("connection", (ws, req) => {
           }
         });
         break;
-      case "apagar luz habitación":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(1);
-          }
-        });
-        break;
-      case "encender luz balcón":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(2);
-          }
-        });
-        break;
-      case "apagar luz balcón":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(3);
-          }
-        });
-        break;
-      case "encender luz sala":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(4);
-          }
-        });
-        break;
-      case "apagar luz sala":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(5);
-          }
-        });
-        break;
-      case "encender televisor":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(6);
-          }
-        });
-        break;
-      case "apagar televisor":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(7);
-          }
-        });
-        break;
-      case "abrir puerta":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(8);
-          }
-        });
-        break;
-      case "cerrar puerta":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(9);
-          }
-        });
-        break;
-      case "encender luz escaleras":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(10);
-          }
-        });
-        break;
-      case "apagar luz escaleras":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(11);
-          }
-        });
-        break;
+      
     }
   });
 
@@ -132,8 +70,8 @@ app.post("/", async (req, res) => {
   res.send("Datos recibidos");
 });
 
-// Arrancar el servidor en el puerto 3000
-const PORT = 3000;
+// Arrancar el servidor en el puerto definido
+const PORT = 4000;
 server.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
 });
