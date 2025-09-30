@@ -36,7 +36,7 @@ wss.on("connection", (ws, req) => {
           client.send(JSON.stringify({
             type:"servermsg",
             msg:"iniciar simulacion",
-            data:data
+            data:message
           }));
        }
         });
