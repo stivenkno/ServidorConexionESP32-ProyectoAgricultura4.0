@@ -10,10 +10,13 @@ app.use(express.json());
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-// Guardamos clientes identificados
-const clients = {};
+// Estructura para guardar clientes
+const clients = {
+  react: [],  // varios React
+  esp32: null // solo uno
+};
 
-wss.on("connection", (ws, req) => {
+wss.on("connection", (ws) => {
   console.log("🖧 Nuevo cliente conectado");
 
   ws.on("message", (data) => {
@@ -26,34 +29,57 @@ wss.on("connection", (ws, req) => {
 
     console.log("📨 Mensaje recibido:", message);
 
-    // Identificación de cliente
+    // --- Identificación del cliente ---
     if (message.type === "identify") {
       if (message.role === "react") {
-        clients.react = ws;
-        console.log("🖥️ Cliente identificado como React");
+        clients.react.push(ws);
+        console.log(`🖥️ Nuevo cliente React conectado. Total: ${clients.react.length}`);
       }
+
       if (message.role === "esp32") {
         clients.esp32 = ws;
-        console.log("📟 Cliente identificado como ESP32");
+        console.log("📟 Cliente ESP32 conectado");
       }
+
       return;
     }
 
-    // Si el cliente React envía datos -> reenviar al ESP32
-    if (message.type === "client-msg" && clients.esp32) {
-      clients.esp32.send(JSON.stringify(message));
-      console.log("➡️ Datos enviados al ESP32");
+    // --- Si un cliente React envía datos, reenviarlos al ESP32 ---
+    if (message.type === "client-msg") {
+      if (clients.esp32) {
+        clients.esp32.send(JSON.stringify(message));
+        console.log("➡️ Datos enviados al ESP32");
+      } else {
+        console.log("⚠️ No hay ESP32 conectado");
+      }
     }
 
-    // Si el ESP32 responde -> reenviar al React
-    if (message.type === "esp32-msg" && clients.react) {
-      clients.react.send(JSON.stringify(message));
-      console.log("⬅️ Respuesta enviada al React");
+    // --- Si el ESP32 envía datos, reenviarlos a todos los React ---
+    if (message.type === "esp32-msg") {
+      if (clients.react.length > 0) {
+        clients.react.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify(message));
+          }
+        });
+        console.log(`⬅️ Mensaje enviado a ${clients.react.length} React(s)`);
+      } else {
+        console.log("⚠️ No hay Reacts conectados");
+      }
     }
   });
 
+  // --- Cuando un cliente se desconecta ---
   ws.on("close", () => {
-    console.log("❌ Cliente desconectado");
+    // Si era el ESP32, lo eliminamos
+    if (clients.esp32 === ws) {
+      clients.esp32 = null;
+      console.log("❌ ESP32 desconectado");
+    }
+
+    // Si era un React, lo removemos del array
+    clients.react = clients.react.filter((client) => client !== ws);
+    console.log(`❌ Cliente React desconectado. Quedan: ${clients.react.length}`);
   });
 });
 
