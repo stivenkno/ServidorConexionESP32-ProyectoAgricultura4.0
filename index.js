@@ -7,69 +7,54 @@ const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-app.use(cors({ origin: "*" }));
-app.use(express.json());
+// Guardamos clientes identificados
+const clients = {};
 
-let esp32socket = null;
-let clientWebSocket = null;
-
-// Cuando un cliente se conecta
 wss.on("connection", (ws, req) => {
-  const clientIP = req.socket.remoteAddress;
-  console.log(` Cliente WebSocket conectado: ${clientIP}`);
+  console.log("🖧 Nuevo cliente conectado");
 
+  ws.on("message", (data) => {
+    let message;
+    try {
+      message = JSON.parse(data.toString());
+    } catch (e) {
+      message = { type: "raw", data: data.toString() };
+    }
 
-  ws.on("message", (msg) => {
-    const message = msg.toString();
-    console.log("📩 Mensaje recibido:", message);
+    console.log("📨 Mensaje recibido:", message);
 
-    if (message === "ESP32") {
-      esp32socket = ws;
-      console.log("🤖 ESP32 registrado!");
-    } 
-  });
+    // Identificación de cliente
+    if (message.type === "identify") {
+      if (message.role === "react") {
+        clients.react = ws;
+        console.log("🖥️ Cliente identificado como React");
+      }
+      if (message.role === "esp32") {
+        clients.esp32 = ws;
+        console.log("📟 Cliente identificado como ESP32");
+      }
+      return;
+    }
 
-  ws.send(JSON.stringify({ type: "Te has conectado exitosamente!" }));
+    // Si el cliente React envía datos -> reenviar al ESP32
+    if (message.type === "client-msg" && clients.esp32) {
+      clients.esp32.send(JSON.stringify(message));
+      console.log("➡️ Datos enviados al ESP32");
+    }
 
-
-
-  ws.on("error", (error) => {
-    console.error("❌ Error en el WebSocket:", error);
+    // Si el ESP32 responde -> reenviar al React
+    if (message.type === "esp32-msg" && clients.react) {
+      clients.react.send(JSON.stringify(message));
+      console.log("⬅️ Respuesta enviada al React");
+    }
   });
 
   ws.on("close", () => {
-    console.log(`🔌 Cliente WebSocket desconectado: ${clientIP}`);
+    console.log("❌ Cliente desconectado");
   });
 });
 
-// Endpoint para iniciar simulación
-app.get("/iniciar-simulacion", (req, res) => {
-  try {
-    if (esp32socket) {
-      esp32socket.send(JSON.stringify({ type: "INICIAR_SIMULACION" }));
-      console.log("🚦 Mensaje enviado al ESP32");
-    }
-    res.status(200).send("Se ha iniciado la simulación");
-  } catch (error) {
-    res.status(500).send("No se ha iniciado la simulación");
-  }
-});
-
-// Endpoint para detener simulación
-app.get("/detener-simulacion", (req, res) => {
-  try {
-    if (esp32socket) {
-      esp32socket.send(JSON.stringify({ type: "DETENER_SIMULACION" }));
-      console.log("🛑 Mensaje enviado al ESP32");
-    }
-    res.status(200).send("Se ha detenido la simulación");
-  } catch (error) {
-    res.status(500).send("No se ha detenido la simulación");
-  }
-});
-
-// Arrancar servidor
-const PORT = 3000;
+const PORT = 4000;
 server.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
 });

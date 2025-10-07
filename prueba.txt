@@ -1,0 +1,45 @@
+#include <Arduino.h>
+
+#define PIN 23
+#define SENSOR_AO 34  // Pin analógico donde está conectado AO
+
+int pwmValue = 0; // Valor inicial
+
+void setup() {
+  pinMode(PIN, OUTPUT);
+  Serial.begin(115200);
+  Serial.println("Control automático según humedad:");
+}
+
+void loop() {
+  int humedadAnalog = analogRead(SENSOR_AO);  // Valor 0 - 4095 en ESP32
+  Serial.print("Valor Analogico: ");
+  Serial.println(humedadAnalog);
+
+  delay(1000);
+
+  // 🔥 Lógica según humedad
+  if (humedadAnalog > 3200) {
+    // Muy seco -> bomba fuerte
+    pwmValue = map(humedadAnalog, 3200, 4095, 160, 200);
+    Serial.println("Estado: Suelo seco -> Bomba alta potencia");
+  } 
+  else if (humedadAnalog > 1800 && humedadAnalog <= 3200) {
+    // Medio húmedo -> bomba media
+    pwmValue = map(humedadAnalog, 1800, 3200, 90, 140);
+    Serial.println("Estado: Suelo medio húmedo -> Bomba potencia media");
+  } 
+  else {
+    // Húmedo -> bomba apagada
+    pwmValue = 0;
+    Serial.println("Estado: Suelo húmedo -> Bomba apagada");
+  }
+
+  // Aplicar al pin
+  analogWrite(PIN, pwmValue);
+
+  Serial.print("PWM aplicado: ");
+  Serial.println(pwmValue);
+
+  delay(20);
+}
