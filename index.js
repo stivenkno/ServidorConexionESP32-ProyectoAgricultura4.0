@@ -4,135 +4,71 @@ import { WebSocketServer } from "ws";
 import cors from "cors";
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-
 const server = createServer(app);
-
-// Crear servidor WebSocket sobre el mismo HTTP server
 const wss = new WebSocketServer({ server });
 
+app.use(cors({ origin: "*" }));
+app.use(express.json());
+
+let esp32socket = null;
+let clientWebSocket = null;
+
+// Cuando un cliente se conecta
 wss.on("connection", (ws, req) => {
   const clientIP = req.socket.remoteAddress;
-  console.log(`🖧 Cliente WebSocket conectado: ${clientIP}`);
+  console.log(` Cliente WebSocket conectado: ${clientIP}`);
 
-  // Enviar saludo al conectar
-  ws.send(JSON.stringify({ type: "info", msg: "¡Hola ESP32!" }));
 
-  ws.on("message", (data) => {
-    let message;
-    try {
-      message = JSON.parse(data);
-    } catch (e) {
-      message = data.toString();
-    }
-    console.log("📨 Mensaje recibido :", message);
+  ws.on("message", (msg) => {
+    const message = msg.toString();
+    console.log("📩 Mensaje recibido:", message);
 
-    switch (message) {
-      case "encender luz habitación":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(0);
-          }
-        });
-        break;
-      case "apagar luz habitación":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(1);
-          }
-        });
-        break;
-      case "encender luz balcón":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(2);
-          }
-        });
-        break;
-      case "apagar luz balcón":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(3);
-          }
-        });
-        break;
-      case "encender luz sala":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(4);
-          }
-        });
-        break;
-      case "apagar luz sala":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(5);
-          }
-        });
-        break;
-      case "encender televisor":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(6);
-          }
-        });
-        break;
-      case "apagar televisor":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(7);
-          }
-        });
-        break;
-      case "abrir puerta":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(8);
-          }
-        });
-        break;
-      case "cerrar puerta":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(9);
-          }
-        });
-        break;
-      case "encender luz escaleras":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(10);
-          }
-        });
-        break;
-      case "apagar luz escaleras":
-        wss.clients.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(11);
-          }
-        });
-        break;
-    }
+    if (message === "ESP32") {
+      esp32socket = ws;
+      console.log("🤖 ESP32 registrado!");
+    } 
+  });
+
+  ws.send(JSON.stringify({ type: "Te has conectado exitosamente!" }));
+
+
+
+  ws.on("error", (error) => {
+    console.error("❌ Error en el WebSocket:", error);
   });
 
   ws.on("close", () => {
-    console.log(`❌ Cliente WebSocket desconectado: ${clientIP}`);
-  });
-
-  ws.on("error", (err) => {
-    console.error("⚠️ Error WebSocket:", err);
+    console.log(`🔌 Cliente WebSocket desconectado: ${clientIP}`);
   });
 });
 
-// Ruta HTTP de prueba
-app.post("/", async (req, res) => {
-  const { comando } = req.body;
-  console.log("📩 Datos recibidos:", comando);
-  res.send("Datos recibidos");
+// Endpoint para iniciar simulación
+app.get("/iniciar-simulacion", (req, res) => {
+  try {
+    if (esp32socket) {
+      esp32socket.send(JSON.stringify({ type: "INICIAR_SIMULACION" }));
+      console.log("🚦 Mensaje enviado al ESP32");
+    }
+    res.status(200).send("Se ha iniciado la simulación");
+  } catch (error) {
+    res.status(500).send("No se ha iniciado la simulación");
+  }
 });
 
-// Arrancar el servidor en el puerto 3000
+// Endpoint para detener simulación
+app.get("/detener-simulacion", (req, res) => {
+  try {
+    if (esp32socket) {
+      esp32socket.send(JSON.stringify({ type: "DETENER_SIMULACION" }));
+      console.log("🛑 Mensaje enviado al ESP32");
+    }
+    res.status(200).send("Se ha detenido la simulación");
+  } catch (error) {
+    res.status(500).send("No se ha detenido la simulación");
+  }
+});
+
+// Arrancar servidor
 const PORT = 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
