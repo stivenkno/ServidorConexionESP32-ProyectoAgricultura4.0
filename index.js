@@ -76,32 +76,8 @@ wss.on("connection", (ws) => {
 
   // --- Cuando un cliente se desconecta ---
   ws.on("close", () => {
-    // Si era el ESP32
-    if (ws.clientType === "esp32") {
-      if (clients.esp32 === ws) {
-        clients.esp32 = null;
-        console.log("❌ ESP32 desconectado");
+    console.log(`🔌 Cliente desconectado (${ws.clientType})`);
 
-        // Avisar a los Reacts
-        clients.react.forEach((client) => {
-          if (client.readyState === client.OPEN) {
-            client.send(JSON.stringify({ type: "esp32-disconnected" }));
-          }
-        });
-      }
-    }
-
-    // Si era un cliente React
-    if (ws.clientType === "react") {
-      clients.react = clients.react.filter((client) => client !== ws);
-      console.log(`❌ Cliente React desconectado. Quedan: ${clients.react.length}`);
-
-      clients.react.forEach((client) => {
-        if (client.readyState === client.OPEN) {
-          client.send(JSON.stringify({ type: "react-disconnected" }));
-        }
-      });
-    }
   });
 });
 
