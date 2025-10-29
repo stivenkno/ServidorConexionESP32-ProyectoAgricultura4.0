@@ -18,6 +18,7 @@ const clients = {
 
 wss.on("connection", (ws) => {
   console.log("🖧 Nuevo cliente conectado");
+  console.log(clients);
 
   ws.on("message", (data) => {
     let message;
@@ -76,7 +77,7 @@ wss.on("connection", (ws) => {
 
   // --- Cuando un cliente se desconecta ---
   ws.on("close", () => {
-    console.log("🔌 Cliente desconectado",wss.clients);
+    console.log(clients);
 
   });
 });
