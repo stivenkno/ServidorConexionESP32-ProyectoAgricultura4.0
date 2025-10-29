@@ -18,7 +18,7 @@ const clients = {
 
 wss.on("connection", (ws) => {
   console.log("🖧 Nuevo cliente conectado");
-  console.log(clients);
+  
 
   ws.on("message", (data) => {
     let message;
@@ -33,12 +33,14 @@ wss.on("connection", (ws) => {
     // --- Identificación del cliente ---
     if (message.type === "identify") {
       if (message.role === "react") {
+        ws.role = "react";
         clients.react.push(ws);
         console.log(`🖥️ Nuevo cliente React conectado. Total: ${clients.react.length}`);
       }
 
       if (message.role === "esp32") {
         clients.esp32 = ws;
+        ws.role = "esp32";
         console.log("📟 Cliente ESP32 conectado");
         clients.react.forEach((client) => {
           if (client.readyState === client.OPEN) {
@@ -77,10 +79,7 @@ wss.on("connection", (ws) => {
 
   // --- Cuando un cliente se desconecta ---
   ws.on("close", () => {
-    console.log(clients.esp32.readyState);
-    clients.react.forEach((client) => {
-      console.log(client.readyState);
-    })
+    console.log("🖧 Cliente desconectado",ws.role);
 
   });
 });
