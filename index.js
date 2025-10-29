@@ -39,6 +39,11 @@ wss.on("connection", (ws) => {
       if (message.role === "esp32") {
         clients.esp32 = ws;
         console.log("📟 Cliente ESP32 conectado");
+        clients.react.forEach((client) => {
+          if (client.readyState === client.OPEN) {
+            client.send(JSON.stringify({ type: "esp32-connected" }));
+          }
+        })
       }
 
       return;
