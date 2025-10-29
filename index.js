@@ -76,7 +76,7 @@ wss.on("connection", (ws) => {
 
   // --- Cuando un cliente se desconecta ---
   ws.on("close", () => {
-    console.log(`🔌 Cliente desconectado (${ws.clientType})`);
+    console.log(`🔌 Cliente desconectado (${ws})`);
 
   });
 });
