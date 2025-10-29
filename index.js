@@ -77,7 +77,10 @@ wss.on("connection", (ws) => {
 
   // --- Cuando un cliente se desconecta ---
   ws.on("close", () => {
-    console.log(clients);
+    console.log(clients.esp32.readyState);
+    clients.react.forEach((client) => {
+      console.log(client.readyState);
+    })
 
   });
 });
